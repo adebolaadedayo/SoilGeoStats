@@ -369,8 +369,6 @@ object-oriented R programming framework utilizing S3 method
 dispatching.</p>
 <pre class="r"><code>library(SoilGeoStats)
 library(sf)
-#&gt; Linking to GEOS 3.14.1, GDAL 3.12.1, PROJ 9.7.1;
-#&gt; sf_use_s2() is TRUE
 library(ggplot2)</code></pre>
 <div id="i.-ingestion-validation-and-spatial-clipping" class="section level2">
 <h2>I. Ingestion, Validation, and Spatial Clipping</h2>
@@ -381,8 +379,7 @@ resolves coordinate mismatches, carries out a point-in-polygon
 intersection clip, and appends the resulting coordinate values.</p>
 <pre class="r"><code># Ingest and spatially process the dataset using system file paths
 soil_data_clipped &lt;- load_and_validate_data()
-#&gt; Warning: attribute variables are assumed to be
-#&gt; spatially constant throughout all geometries
+#&gt; Warning: attribute variables are assumed to be spatially constant throughout all geometries
 
 # View spatial features layout
 print(head(soil_data_clipped))
@@ -391,76 +388,34 @@ print(head(soil_data_clipped))
 #&gt; Dimension:     XY
 #&gt; Bounding box:  xmin: 641884.4 ymin: 5290469 xmax: 692831.1 ymax: 5427076
 #&gt; Projected CRS: ETRS89 / UTM zone 32N
-#&gt;        Depth  POINTID pH_CaCl2 pH_H2O    EC   OC
-#&gt; 1729 0-20 cm 43882738      5.8   6.25 44.10 51.0
-#&gt; 1730 0-20 cm 44202858      6.9   7.37 24.81 13.0
-#&gt; 1731 0-20 cm 44282800      5.8   6.09 26.61 47.2
-#&gt; 1732 0-20 cm 44342838      6.4   6.53 12.87 36.0
-#&gt; 1733 0-20 cm 44342874      6.2   6.67 22.85 14.0
-#&gt; 1734 0-20 cm 44402818      6.4   6.77 15.93 14.9
-#&gt;      CaCO3    P   N     K OC..20.30.cm.
-#&gt; 1729  &lt;NA&gt; 20.8 5.8 147.7              
-#&gt; 1730     1   71 1.6 352.9              
-#&gt; 1731     1 25.7 4.8 175.6              
-#&gt; 1732  &lt;NA&gt; 17.6 3.8  68.3              
-#&gt; 1733  &lt;NA&gt; 67.7 1.6 323.6              
-#&gt; 1734  &lt;NA&gt; 46.7 1.7 248.3              
-#&gt;      CaCO3..20.30.cm. Ox_Al Ox_Fe NUTS_0 NUTS_1
-#&gt; 1729               NA    NA    NA     DE    DE2
-#&gt; 1730               NA    NA    NA     DE    DE2
-#&gt; 1731               NA    NA    NA     DE    DE2
-#&gt; 1732               NA    NA    NA     DE    DE2
-#&gt; 1733               NA   0.9   2.5     DE    DE2
-#&gt; 1734               NA    NA    NA     DE    DE2
-#&gt;      NUTS_2 NUTS_3 SURVEY_DATE Elev  LC   LU
-#&gt; 1729   DE21  DE21N    18-09-18  761 E20 U111
-#&gt; 1730   DE21  DE219    17-05-18  409 B11 U111
-#&gt; 1731   DE21  DE217    17-08-18  480 E20 U111
-#&gt; 1732   DE21  DE21J    13-08-18  405 E20 U111
-#&gt; 1733   DE21  DE219    12-05-18  482 B13 U111
-#&gt; 1734   DE21  DE21B    13-08-18  484 B15 U111
-#&gt;       LC0_Desc                           LC1_Desc
-#&gt; 1729 Grassland Grassland without tree/shrub cover
-#&gt; 1730  Cropland                       Common wheat
-#&gt; 1731 Grassland Grassland without tree/shrub cover
-#&gt; 1732 Grassland Grassland without tree/shrub cover
-#&gt; 1733  Cropland                             Barley
-#&gt; 1734  Cropland                               Oats
-#&gt;                                                     LU1_Desc
-#&gt; 1729 Agriculture (excluding fallow land and kitchen gardens)
-#&gt; 1730 Agriculture (excluding fallow land and kitchen gardens)
-#&gt; 1731 Agriculture (excluding fallow land and kitchen gardens)
-#&gt; 1732 Agriculture (excluding fallow land and kitchen gardens)
-#&gt; 1733 Agriculture (excluding fallow land and kitchen gardens)
-#&gt; 1734 Agriculture (excluding fallow land and kitchen gardens)
-#&gt;        GID_1 GID_0 COUNTRY NAME_1 VARNAME_1
-#&gt; 1729 DEU.2_1   DEU Germany Bayern   Bavaria
-#&gt; 1730 DEU.2_1   DEU Germany Bayern   Bavaria
-#&gt; 1731 DEU.2_1   DEU Germany Bayern   Bavaria
-#&gt; 1732 DEU.2_1   DEU Germany Bayern   Bavaria
-#&gt; 1733 DEU.2_1   DEU Germany Bayern   Bavaria
-#&gt; 1734 DEU.2_1   DEU Germany Bayern   Bavaria
-#&gt;      NL_NAME_1    TYPE_1  ENGTYPE_1 CC_1 HASC_1
-#&gt; 1729        NA Freistaat Free State   09  DE.BY
-#&gt; 1730        NA Freistaat Free State   09  DE.BY
-#&gt; 1731        NA Freistaat Free State   09  DE.BY
-#&gt; 1732        NA Freistaat Free State   09  DE.BY
-#&gt; 1733        NA Freistaat Free State   09  DE.BY
-#&gt; 1734        NA Freistaat Free State   09  DE.BY
-#&gt;      ISO_1 Shape_Leng  Shape_Area
-#&gt; 1729 DE-BY    2588176 70539709195
-#&gt; 1730 DE-BY    2588176 70539709195
-#&gt; 1731 DE-BY    2588176 70539709195
-#&gt; 1732 DE-BY    2588176 70539709195
-#&gt; 1733 DE-BY    2588176 70539709195
-#&gt; 1734 DE-BY    2588176 70539709195
-#&gt;                      geometry        X       Y
-#&gt; 1729 POINT (641884.4 5290469) 641884.4 5290469
-#&gt; 1730 POINT (672323.7 5410898) 672323.7 5410898
-#&gt; 1731 POINT (681066.7 5352983) 681066.7 5352983
-#&gt; 1732 POINT (686576.5 5391068) 686576.5 5391068
-#&gt; 1733 POINT (686111.4 5427076) 686111.4 5427076
-#&gt; 1734 POINT (692831.1 5371136) 692831.1 5371136</code></pre>
+#&gt;        Depth  POINTID pH_CaCl2 pH_H2O    EC   OC CaCO3    P   N     K OC..20.30.cm. CaCO3..20.30.cm. Ox_Al
+#&gt; 1729 0-20 cm 43882738      5.8   6.25 44.10 51.0  &lt;NA&gt; 20.8 5.8 147.7                             NA    NA
+#&gt; 1730 0-20 cm 44202858      6.9   7.37 24.81 13.0     1   71 1.6 352.9                             NA    NA
+#&gt; 1731 0-20 cm 44282800      5.8   6.09 26.61 47.2     1 25.7 4.8 175.6                             NA    NA
+#&gt; 1732 0-20 cm 44342838      6.4   6.53 12.87 36.0  &lt;NA&gt; 17.6 3.8  68.3                             NA    NA
+#&gt; 1733 0-20 cm 44342874      6.2   6.67 22.85 14.0  &lt;NA&gt; 67.7 1.6 323.6                             NA   0.9
+#&gt; 1734 0-20 cm 44402818      6.4   6.77 15.93 14.9  &lt;NA&gt; 46.7 1.7 248.3                             NA    NA
+#&gt;      Ox_Fe NUTS_0 NUTS_1 NUTS_2 NUTS_3 SURVEY_DATE Elev  LC   LU  LC0_Desc                           LC1_Desc
+#&gt; 1729    NA     DE    DE2   DE21  DE21N    18-09-18  761 E20 U111 Grassland Grassland without tree/shrub cover
+#&gt; 1730    NA     DE    DE2   DE21  DE219    17-05-18  409 B11 U111  Cropland                       Common wheat
+#&gt; 1731    NA     DE    DE2   DE21  DE217    17-08-18  480 E20 U111 Grassland Grassland without tree/shrub cover
+#&gt; 1732    NA     DE    DE2   DE21  DE21J    13-08-18  405 E20 U111 Grassland Grassland without tree/shrub cover
+#&gt; 1733   2.5     DE    DE2   DE21  DE219    12-05-18  482 B13 U111  Cropland                             Barley
+#&gt; 1734    NA     DE    DE2   DE21  DE21B    13-08-18  484 B15 U111  Cropland                               Oats
+#&gt;                                                     LU1_Desc   GID_1 GID_0 COUNTRY NAME_1 VARNAME_1 NL_NAME_1
+#&gt; 1729 Agriculture (excluding fallow land and kitchen gardens) DEU.2_1   DEU Germany Bayern   Bavaria        NA
+#&gt; 1730 Agriculture (excluding fallow land and kitchen gardens) DEU.2_1   DEU Germany Bayern   Bavaria        NA
+#&gt; 1731 Agriculture (excluding fallow land and kitchen gardens) DEU.2_1   DEU Germany Bayern   Bavaria        NA
+#&gt; 1732 Agriculture (excluding fallow land and kitchen gardens) DEU.2_1   DEU Germany Bayern   Bavaria        NA
+#&gt; 1733 Agriculture (excluding fallow land and kitchen gardens) DEU.2_1   DEU Germany Bayern   Bavaria        NA
+#&gt; 1734 Agriculture (excluding fallow land and kitchen gardens) DEU.2_1   DEU Germany Bayern   Bavaria        NA
+#&gt;         TYPE_1  ENGTYPE_1 CC_1 HASC_1 ISO_1 Shape_Leng  Shape_Area                 geometry        X       Y
+#&gt; 1729 Freistaat Free State   09  DE.BY DE-BY    2588176 70539709195 POINT (641884.4 5290469) 641884.4 5290469
+#&gt; 1730 Freistaat Free State   09  DE.BY DE-BY    2588176 70539709195 POINT (672323.7 5410898) 672323.7 5410898
+#&gt; 1731 Freistaat Free State   09  DE.BY DE-BY    2588176 70539709195 POINT (681066.7 5352983) 681066.7 5352983
+#&gt; 1732 Freistaat Free State   09  DE.BY DE-BY    2588176 70539709195 POINT (686576.5 5391068) 686576.5 5391068
+#&gt; 1733 Freistaat Free State   09  DE.BY DE-BY    2588176 70539709195 POINT (686111.4 5427076) 686111.4 5427076
+#&gt; 1734 Freistaat Free State   09  DE.BY DE-BY    2588176 70539709195 POINT (692831.1 5371136) 692831.1 5371136</code></pre>
 </div>
 <div id="ii.-exploratory-spatial-data-analysis" class="section level2">
 <h2>II. Exploratory Spatial Data Analysis</h2>
@@ -477,6 +432,10 @@ cat(&quot;Minimum Point Spacing Interval  :&quot;, round(eda_metrics$minimum_sam
 #&gt; Minimum Point Spacing Interval  : 2.83 km
 cat(&quot;Maximum Study Extent Diameter   :&quot;, round(eda_metrics$maximum_sampling_interval_meters / 1000, 2), &quot;km\n&quot;)
 #&gt; Maximum Study Extent Diameter   : 361.43 km
+cat(&quot;Sample Mean of Target Column:&quot;, eda_metrics$variable_mean, &quot;\n&quot;)
+#&gt; Sample Mean of Target Column: 32.99839
+cat(&quot;Sample Median of Target Column:&quot;, eda_metrics$variable_median, &quot;\n&quot;)
+#&gt; Sample Median of Target Column: 29.45
 cat(&quot;Sample Variance of Target Column:&quot;, eda_metrics$variable_variance, &quot;\n&quot;)
 #&gt; Sample Variance of Target Column: 470.3382</code></pre>
 </div>

@@ -53,6 +53,8 @@ eda_metrics <- calculate_spatial_distances(spatial_data = soil_data_clipped, tar
 cat("Total Observations Inside Mask  :", eda_metrics$total_points, "points\n")
 cat("Minimum Point Spacing Interval  :", round(eda_metrics$minimum_sampling_interval_meters / 1000, 2), "km\n")
 cat("Maximum Study Extent Diameter   :", round(eda_metrics$maximum_sampling_interval_meters / 1000, 2), "km\n")
+cat("Sample Mean of Target Column:", eda_metrics$variable_mean, "\n")
+cat("Sample Median of Target Column:", eda_metrics$variable_median, "\n")
 cat("Sample Variance of Target Column:", eda_metrics$variable_variance, "\n")
 ```
 
