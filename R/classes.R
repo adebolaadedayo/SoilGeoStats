@@ -190,3 +190,5 @@ plot.spatial_grid <- function(x, boundary_data, ...) {
 }
 
 utils::globalVariables(c("X", "Y", "predicted_idw", "predicted_rk_value"))
+#' @import dplyr
+NULL
