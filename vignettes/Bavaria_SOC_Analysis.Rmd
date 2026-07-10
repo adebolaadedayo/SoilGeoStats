@@ -35,15 +35,51 @@ The first stage of the analysis pipeline ingests unprojected WGS84 point records
 
 ```{r}
 # Ingest and spatially process the dataset using system file paths
-soil_data_clipped <- load_and_validate_data()
+soil_data_raw <- load_and_validate_data()
+
+# Filter to essential columns only
+soil_data_clipped <- dplyr::select(soil_data_raw, OC, N, Elev, geometry)
 
 # View spatial features layout
 print(head(soil_data_clipped))
 ```
 
+**Column Definitions:**
+
+`OC` (Organic Carbon Content): the primary target variable,representing the mass fraction of organic carbon in the topsoil (g/kg).
+
+`N` (Nitrogen): an environmental covariate representing the total nitrogen content (g/kg), highly correlated with organic matter accumulation.
+
+`Elev` (Elevation): A topographic covariate representing altitude above sea level (meters).
+
+`geometry` (Spatial Features): The metric coordinate point layouts in the ETRS89 / UTM zone 32N grid system.
+
+### Visualizing the Spatial Sample Distribution
+
+Before executing the interpolation surfaces, the cleaned point observation locations are mapped to evaluate how evenly the physical soil samples are dispersed across the Bavarian state boundary:
+
+```{r point_map, fig.width=7, fig.height=5}
+
+# Load Bavaria boundary polygon
+bavaria_mask <- sf::st_read(system.file("extdata", "shape_file/Bav_Boundary.shp", package = "SoilGeoStats"), quiet = TRUE)
+
+# Plot point distributions
+ggplot() +
+  geom_sf(data = bavaria_mask, fill = "gray95", color = "gray60") +
+  geom_sf(data = soil_data_clipped, aes(color = OC), size = 1.5, alpha = 0.8) +
+  scale_color_viridis_c(name = "Soil Organic Carbon\n(g/kg)", option = "viridis") +
+  coord_sf(datum = sf::st_crs(25832)) +
+  labs(title = "LUCAS 2018 Topsoil Sample Point Distribution",
+       subtitle = "Spatially Clipped to Bavaria Study Area") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+```
+
+
 ## II. Exploratory Spatial Data Analysis
 
-Before running interpolations, we execute a spatial distance analysis to compute minimum and maximum point-pair bounds alongside basic variable summary metrics (such as mean, median, variance).
+Before running interpolations, a spatial distance analysis is executed to compute minimum and maximum point-pair bounds alongside basic variable summary metrics (such as mean, median, variance).
 
 ```{r}
 # Execute spatial distance metric profiling
@@ -57,6 +93,21 @@ cat("Sample Mean of Target Column:", eda_metrics$variable_mean, "\n")
 cat("Sample Median of Target Column:", eda_metrics$variable_median, "\n")
 cat("Sample Variance of Target Column:", eda_metrics$variable_variance, "\n")
 ```
+
+**Statistical Significance of Results:**
+
+- Total Observations (`total_points`): Represents the observation sample size available within the geographic region. A robust point count provides the data density required to build statistically sound interpolation weights.
+
+- Minimum Point Spacing Interval (`minimum_sampling_interval_meters`): Signifies the absolute finest spatial resolution of the raw data collection grid. This metric tells us how close the nearest neighbor points are.
+
+- Maximum Study Extent Diameter (`maximum_sampling_interval_meters`): Measures the absolute maximum geographic distance stretching across the study polygon. It is critical for constraining interpolation search radii.
+
+- Sample Mean (`variable_mean`): This provides the global mathematical baseline of Topsoil Organic Carbon across Bavaria.
+
+- Sample Median (`variable_median`): This identifies the exact midpoint of the data distribution. Comparing the mean directly to the median allows us to detect statistical skewness. If the mean is significantly higher than the median, it indicates a right-skewed distribution, meaning the landscape has localized "hotspots" of high carbon storage among lower baseline agricultural values.
+
+- Sample Variance (`variable_variance`): Measures the global dispersion and heterogeneity of the Soil Organic Carbon data. Higher variance values signal an environmentally complex region with significant localized shifts, highlighting why advanced geostatistical modeling (like Regression Kriging) is necessary over simple averages.
+
 
 ## III. Spatial Interpolation (S3 Object Construction)
 
