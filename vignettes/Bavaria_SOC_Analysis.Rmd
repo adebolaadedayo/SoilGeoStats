@@ -1,5 +1,6 @@
 ---
 title: "Geostatistical Modelling of Soil Organic Carbon in Bavaria"
+author: "<center><medium>Adebola David Adedayo</medium></center>"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Geostatistical Modelling of Soil Organic Carbon in Bavaria}
@@ -16,6 +17,7 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 ```
+
 
 # Introduction and Background
 
