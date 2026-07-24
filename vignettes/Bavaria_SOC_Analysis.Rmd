@@ -37,12 +37,12 @@ The first stage of the analysis pipeline ingests unprojected WGS84 point records
 ```{r}
 # Ingest and spatially process the dataset using system file paths
 soil_data_raw <- load_and_validate_data(
-    file_path = system.file("extdata", "soil_data/LUCAS-SOIL-2018.csv", package = "SoilGeoStats"),
+    file_path = system.file("extdata", "soil_data/LUCAS-SOIL-2018.csv", package = "SoilGeoStats"), # file path to soil data 
     x_col = "TH_LONG", # X coordinate column
     y_col = "TH_LAT", # Y coordinate column
-    target_col = "OC",
-    covariate_cols = c("N", "Elev"),
-    shape_path = system.file("extdata", "shape_file/Bav_Boundary.shp", package = "SoilGeoStats")
+    target_col = "OC", # the variable to be modelled
+    covariate_cols = c("N", "Elev"), # covariate variables for regression kriging
+    shape_path = system.file("extdata", "shape_file/Bav_Boundary.shp", package = "SoilGeoStats") # file path to boundary shapefile
 )
 
 # Filter to essential columns only

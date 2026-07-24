@@ -373,6 +373,7 @@ object-oriented R programming framework utilizing S3 method
 dispatching.</p>
 <pre class="r"><code>library(SoilGeoStats)
 library(sf)
+#&gt; Linking to GEOS 3.14.1, GDAL 3.12.1, PROJ 9.7.1; sf_use_s2() is TRUE
 library(ggplot2)</code></pre>
 <div id="i.-ingestion-validation-and-spatial-clipping" class="section level2">
 <h2>I. Ingestion, Validation, and Spatial Clipping</h2>
@@ -383,12 +384,12 @@ resolves coordinate mismatches, carries out a point-in-polygon
 intersection clip, and appends the resulting coordinate values.</p>
 <pre class="r"><code># Ingest and spatially process the dataset using system file paths
 soil_data_raw &lt;- load_and_validate_data(
-    file_path = system.file(&quot;extdata&quot;, &quot;soil_data/LUCAS-SOIL-2018.csv&quot;, package = &quot;SoilGeoStats&quot;),
+    file_path = system.file(&quot;extdata&quot;, &quot;soil_data/LUCAS-SOIL-2018.csv&quot;, package = &quot;SoilGeoStats&quot;), # file path to soil data 
     x_col = &quot;TH_LONG&quot;, # X coordinate column
     y_col = &quot;TH_LAT&quot;, # Y coordinate column
-    target_col = &quot;OC&quot;,
-    covariate_cols = c(&quot;N&quot;, &quot;Elev&quot;),
-    shape_path = system.file(&quot;extdata&quot;, &quot;shape_file/Bav_Boundary.shp&quot;, package = &quot;SoilGeoStats&quot;)
+    target_col = &quot;OC&quot;, # the variable to be modelled
+    covariate_cols = c(&quot;N&quot;, &quot;Elev&quot;), # covariate variables for regression kriging
+    shape_path = system.file(&quot;extdata&quot;, &quot;shape_file/Bav_Boundary.shp&quot;, package = &quot;SoilGeoStats&quot;) # file path to boundary shapefile
 )
 #&gt; Warning: attribute variables are assumed to be spatially constant throughout all geometries
 
