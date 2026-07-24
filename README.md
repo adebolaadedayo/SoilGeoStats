@@ -99,10 +99,15 @@ library(sf)
 library(ggplot2)
 
 # Step 1 & 2: Ingest data using built-in package system defaults and verify spacing
-soil_points <- load_and_validate_data()
+soil_points <- load_and_validate_data(file_path = system.file("extdata", "soil_data/LUCAS-SOIL-2018.csv", package = "SoilGeoStats"),
+    x_col = "TH_LONG", # X coordinate column
+    y_col = "TH_LAT", #Y coordinate column
+    target_col = "OC",
+    covariate_cols = c("N", "Elev"),
+    shape_path = system.file("extdata", "shape_file/Bav_Boundary.shp", package = "SoilGeoStats"))
 #> Warning: attribute variables are assumed to be spatially constant throughout
 #> all geometries
-spatial_EDA <- calculate_spatial_distances(spatial_data = soil_points, target_col = "OC")
+spatial_EDA <- exploratory_data_analysis(spatial_data = soil_points, target_col = "OC")
 
 # View exploratory metrics calculated by the pipeline
 print(spatial_EDA$total_points)

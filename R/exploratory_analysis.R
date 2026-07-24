@@ -5,7 +5,7 @@
 #'
 #' @return A named list containing structural summaries of geographic distances and result of exploratory data analysis.
 #' @export
-calculate_spatial_distances <- function(spatial_data, target_col) {
+exploratory_data_analysis <- function(spatial_data, target_col) {
 
   ## DATA VALIDATION
   if (!inherits(spatial_data, "sf")) {

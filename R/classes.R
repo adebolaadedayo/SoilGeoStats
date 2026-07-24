@@ -181,10 +181,13 @@ plot.spatial_grid <- function(x, boundary_data, ...) {
     ggplot2::geom_sf(data = polygon_mask, fill = NA, color = "black", linewidth = 0.8, inherit.aes = FALSE) +
     ggplot2::coord_sf(datum = 25832) +
     ggplot2::theme_bw() +
-    ggplot2::labs(x = "Easting (UTM Meters)", y = "Northing (UTM Meters)") +
+    ggplot2::labs(x = NULL, y = NULL) +
     ggplot2::theme(legend.position = "bottom",
                    plot.title = ggplot2::element_text(face = "bold", size = 12),
-                   panel.grid.major = ggplot2::element_line(color = "gray95"))
+                   panel.grid.major = ggplot2::element_line(color = "gray95"),
+                   axis.text = ggplot2::element_blank(),
+                   axis.ticks = ggplot2::element_blank()
+                   )
 
   return(final_map)
 }

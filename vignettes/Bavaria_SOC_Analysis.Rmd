@@ -1,5 +1,5 @@
 ---
-title: "Geostatistical Modelling of Soil Organic Carbon in Bavaria"
+title: "Geostatistical Modelling of Soil Organic Carbon in Bavaria - (SoilGeoStats)"
 author: "<center><medium>Adebola David Adedayo</medium></center>"
 output: rmarkdown::html_vignette
 vignette: >
@@ -17,7 +17,6 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 ```
-
 
 # Introduction and Background
 
@@ -37,7 +36,14 @@ The first stage of the analysis pipeline ingests unprojected WGS84 point records
 
 ```{r}
 # Ingest and spatially process the dataset using system file paths
-soil_data_raw <- load_and_validate_data()
+soil_data_raw <- load_and_validate_data(
+    file_path = system.file("extdata", "soil_data/LUCAS-SOIL-2018.csv", package = "SoilGeoStats"),
+    x_col = "TH_LONG", # X coordinate column
+    y_col = "TH_LAT", # Y coordinate column
+    target_col = "OC",
+    covariate_cols = c("N", "Elev"),
+    shape_path = system.file("extdata", "shape_file/Bav_Boundary.shp", package = "SoilGeoStats")
+)
 
 # Filter to essential columns only
 soil_data_clipped <- dplyr::select(soil_data_raw, OC, N, Elev, geometry)
@@ -78,14 +84,13 @@ ggplot() +
 
 ```
 
-
 ## II. Exploratory Spatial Data Analysis
 
 Before running interpolations, a spatial distance analysis is executed to compute minimum and maximum point-pair bounds alongside basic variable summary metrics (such as mean, median, variance).
 
 ```{r}
-# Execute spatial distance metric profiling
-eda_metrics <- calculate_spatial_distances(spatial_data = soil_data_clipped, target_col = "OC")
+# Execute spatial data analysis of target variable (OC)
+eda_metrics <- exploratory_data_analysis(spatial_data = soil_data_clipped, target_col = "OC")
 
 # Display compiled summary metrics
 cat("Total Observations Inside Mask  :", eda_metrics$total_points, "points\n")
@@ -110,7 +115,6 @@ cat("Sample Variance of Target Column:", eda_metrics$variable_variance, "\n")
 
 - Sample Variance (`variable_variance`): Measures the global dispersion and heterogeneity of the Soil Organic Carbon data. Higher variance values signal an environmentally complex region with significant localized shifts, highlighting why advanced geostatistical modeling (like Regression Kriging) is necessary over simple averages.
 
-
 ## III. Spatial Interpolation (S3 Object Construction)
 
 The deterministic and hybrid geostatistical modeling engines are executed. The functions automatically output instances of the custom S3 `spatial_grid` class.
@@ -130,12 +134,14 @@ rk_grid_obj  <- interpolate_regression_kriging(spatial_data = soil_data_clipped,
 By simply calling standard R commands like `print()` and `summary()`, R automatically resolves the custom S3 hierarchy stamp, routing the data directly to the created leave-one-out cross-validation (LOOCV) calculations.
 
 Object Metadata:
+
 ```{r}
 print(idw_grid_obj) #View output of IDW interpolation
 print(rk_grid_obj) #View output of regression kriging
 ```
 
 Interpolation Model Accuracy Assessments (LOOCV Results):
+
 ```{r}
 summary(idw_grid_obj) #Accuracy metrics of IDW interpolation
 summary(rk_grid_obj) #Accuracy metrics of regression kriging
@@ -145,7 +151,7 @@ summary(rk_grid_obj) #Accuracy metrics of regression kriging
 
 Finally, the custom S3 `plot()` method is explored. By integrating the study region's polygon file path directly into the generic function, it automatically generates continuous map tile surfaces clipped cleanly to study region.
 
-```{r}
+```{r continuous_map, fig.width=7, fig.height=5}
 # Extract internal shape path for vector outlines
 bavaria_mask <- sf::st_read(system.file("extdata", "shape_file/Bav_Boundary.shp", package = "SoilGeoStats"), quiet = TRUE)
 
@@ -158,3 +164,16 @@ print(map_idw)
 print(map_rk)
 ```
 
+# Reproducibility and Source Code
+
+To ensure complete scientific transparency and computational reproducibility, the underlying package architecture, including the S3 class (`spatial_grid`), geostatistical interpolation methods, and cross-validation functions is fully open-source.
+
+- **GitHub Repository:** [SoilGeoStats Source Code](https://github.com/adebolaadedayo/SoilGeoStats)
+
+- **Bug Reports & Contributions:** Issues or feature requests can be logged directly on the repository's issue tracker.
+
+# LLM Usage Declaration
+
+I, the author declares the use of a Generative AI tool in the preparation of this assignment.\
+Specifically, the AI tool (**Gemini**) was used for *technical code troubleshooting* and *Advanced Feature Integration* like the "Regression Krigging" and "Leave-One-Out Cross-Validation (LOOCV)", but not for generating research data.\
+All intellectual and creative work is original and has been conducted by the author without AI assistance.
