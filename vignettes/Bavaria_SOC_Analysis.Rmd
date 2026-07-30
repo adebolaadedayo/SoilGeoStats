@@ -12,17 +12,25 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
+  echo = TRUE,
   fig.width = 7,
   fig.height = 5,
   out.width = "100%"
 )
 ```
 
-# Introduction and Background
+# 1. Introduction and Background
 
-This vignette presents a reproducible geostatistical data pipeline evaluating Soil Organic Carbon (OC) distribution across Bavaria, Germany. Using a dataset obtained from the official [LUCAS 2018 Topsoil data](https://esdac.jrc.ec.europa.eu/content/lucas-2018-topsoil-data) compiled by the European Soil Data Centre (ESDAC), this package will be useful to spatial data analysts, environmental scientists, soil ecologists, and researchers who work with soil point datasets and need a quick, reproducible pipeline to clip, validate, and carry out geostatistical interpolation.
+Soil Organic Carbon (OC) plays a critical role in agricultural productivity and regional climate mitigation strategies. Soil research is still reliant on traditional point-based sampling, but it does not provide the continuous coverage required for spatial decision-making.\
+Geostatistical methods, such as Inverse Distance Weighting (IDW) and Kriging, address this by modelling the spatial autocorrelation of soil point observations to predict values at unsampled locations.
 
-The study workflow showcases standard GIS methods upgraded into an object-oriented R programming framework utilizing S3 method dispatching.
+This vignette presents a reproducible geostatistical data pipeline evaluating OC distribution across the state of Bavaria, Germany. Using a dataset obtained from the official [LUCAS 2018 Topsoil Survey](https://esdac.jrc.ec.europa.eu/content/lucas-2018-topsoil-data) compiled by the European Soil Data Centre (ESDAC), this study shows how **`SoilGeoStats`** package simplifies spatial data ingestion, exploratory statistics, and continuous grid surface interpolation within an object-oriented R framework using S3 method dispatching.\
+`SoilGeoStats` will be useful to spatial data analysts, environmental scientists, soil ecologists, and researchers who work with soil point datasets and need a quick, reproducible pipeline to clip, validate, and carry out geostatistical interpolation.
+
+# 2. Data Description
+
+The LUCAS 2018 Topsoil dataset used in this work contains soil properties such as pH, organic carbon content, phosphorus, potassium, and nitrogen, covering the European Union and the United Kingdom.\
+This dataset originally consisted of 18,984 samples, taken from 0-20 cm depth in a **CSV file**.
 
 ```{r}
 library(SoilGeoStats)
@@ -30,9 +38,13 @@ library(sf)
 library(ggplot2)
 ```
 
-## I. Ingestion, Validation, and Spatial Clipping
+# 3. Analysis Workflow
 
-The first stage of the analysis pipeline ingests unprojected WGS84 point records and matches them against a regional vector boundary shapefile of Bavaria (EPSG: 25832) obtained from [GADM](https://gadm.org/data.html). The function automatically resolves coordinate mismatches, carries out a point-in-polygon intersection clip, and appends the resulting coordinate values.
+The study workflow showcases standard GIS methods upgraded into an object-oriented R programming framework utilizing S3 method dispatching.
+
+## 3.1. Ingestion, Validation, and Spatial Clipping
+
+The first stage of the analysis pipeline ingests unprojected WGS84 point records and intersects them against a regional vector boundary shapefile of Bavaria (EPSG: 25832) obtained from [GADM](https://gadm.org/data.html), stored directly within the package's `inst/extdata` directory. The function automatically resolves coordinate mismatches, clips observations to the study area, and appends projected UTM coordinates.
 
 ```{r}
 # Ingest and spatially process the dataset using system file paths
@@ -60,11 +72,11 @@ print(head(soil_data_clipped))
 
 `Elev` (Elevation): A topographic covariate representing altitude above sea level (meters).
 
-`geometry` (Spatial Features): The metric coordinate point layouts in the ETRS89 / UTM zone 32N grid system.
+`geometry` (Spatial Features): Point geometries in the ETRS89 / UTM zone 32N grid system.
 
 ### Visualizing the Spatial Sample Distribution
 
-Before executing the interpolation surfaces, the cleaned point observation locations are mapped to evaluate how evenly the physical soil samples are dispersed across the Bavarian state boundary:
+Before executing the interpolation surfaces, the cleaned point observation locations are mapped to visualize how evenly the physical soil samples are dispersed across the Bavarian state boundary:
 
 ```{r point_map, fig.width=7, fig.height=5}
 
@@ -84,12 +96,12 @@ ggplot() +
 
 ```
 
-## II. Exploratory Spatial Data Analysis
+## 3.2. Exploratory Spatial Data Analysis
 
-Before running interpolations, a spatial distance analysis is executed to compute minimum and maximum point-pair bounds alongside basic variable summary metrics (such as mean, median, variance).
+Before interpolating, a distance metrics alongside basic summary statistics (such as mean, median, variance) are calculated to analyze point spacing bounds and global distribution skewness.
 
 ```{r}
-# Execute spatial data analysis of target variable (OC)
+# Execute exploratory spatial data analysis of target variable (OC)
 eda_metrics <- exploratory_data_analysis(spatial_data = soil_data_clipped, target_col = "OC")
 
 # Display compiled summary metrics
@@ -103,7 +115,7 @@ cat("Sample Variance of Target Column:", eda_metrics$variable_variance, "\n")
 
 **Statistical Significance of Results:**
 
-- Total Observations (`total_points`): Represents the observation sample size available within the geographic region. A robust point count provides the data density required to build statistically sound interpolation weights.
+- Total Observations (`total_points`): Represents the observation sample size available within the geographic region.
 
 - Minimum Point Spacing Interval (`minimum_sampling_interval_meters`): Signifies the absolute finest spatial resolution of the raw data collection grid. This metric tells us how close the nearest neighbor points are.
 
@@ -111,13 +123,15 @@ cat("Sample Variance of Target Column:", eda_metrics$variable_variance, "\n")
 
 - Sample Mean (`variable_mean`): This provides the global mathematical baseline of Topsoil Organic Carbon across Bavaria.
 
-- Sample Median (`variable_median`): This identifies the exact midpoint of the data distribution. Comparing the mean directly to the median allows us to detect statistical skewness. If the mean is significantly higher than the median, it indicates a right-skewed distribution, meaning the landscape has localized "hotspots" of high carbon storage among lower baseline agricultural values.
+- Sample Median (`variable_median`): This identifies the exact midpoint of the data distribution. Comparing the mean directly to the median allows us to detect statistical skewness.\
+  *If the mean is significantly higher than the median, it indicates a right-skewed distribution, meaning the landscape has localized "hotspots" of high carbon storage among lower baseline agricultural values*.
 
 - Sample Variance (`variable_variance`): Measures the global dispersion and heterogeneity of the Soil Organic Carbon data. Higher variance values signal an environmentally complex region with significant localized shifts, highlighting why advanced geostatistical modeling (like Regression Kriging) is necessary over simple averages.
 
-## III. Spatial Interpolation (S3 Object Construction)
+## 3.3. Spatial Interpolation (S3 Object Construction)
 
-The deterministic and hybrid geostatistical modeling engines are executed. The functions automatically output instances of the custom S3 `spatial_grid` class.
+Two interpolation approaches - deterministic **Inverse Distance Weighting (IDW)** and hybrid **Regression Krigging (RK)** model incorporating Nitrogen and Elevation covariates, are compared.\
+Both engines return the custom S3 `spatial_grid` class.
 
 ```{r}
 # 1. Deterministic Inverse Distance Weighting Interpolation
@@ -129,13 +143,14 @@ rk_grid_obj  <- interpolate_regression_kriging(spatial_data = soil_data_clipped,
                                                 covariate_cols = c("N", "Elev"))
 ```
 
-## IV. S3 Methods (Print and Cross-Validation)
+## 3.4. S3 Methods Dispatching: Metadata and Cross-Validation
 
 By simply calling standard R commands like `print()` and `summary()`, R automatically resolves the custom S3 hierarchy stamp, routing the data directly to the created leave-one-out cross-validation (LOOCV) calculations.
 
 Object Metadata:
 
 ```{r}
+# View S3 Metadata 
 print(idw_grid_obj) #View output of IDW interpolation
 print(rk_grid_obj) #View output of regression kriging
 ```
@@ -143,13 +158,14 @@ print(rk_grid_obj) #View output of regression kriging
 Interpolation Model Accuracy Assessments (LOOCV Results):
 
 ```{r}
+# Execute Leave-One-Out Cross-Validation (LOOCV)
 summary(idw_grid_obj) #Accuracy metrics of IDW interpolation
 summary(rk_grid_obj) #Accuracy metrics of regression kriging
 ```
 
-## V. Cartographic Visualizations
+## 3.5. Cartographic Visualizations
 
-Finally, the custom S3 `plot()` method is explored. By integrating the study region's polygon file path directly into the generic function, it automatically generates continuous map tile surfaces clipped cleanly to study region.
+Finally, the custom S3 `plot()` method is explored. By integrating the study region's polygon file path directly into the function, it automatically generates continuous map tile surfaces clipped cleanly to study region.
 
 ```{r continuous_map, fig.width=7, fig.height=5}
 # Extract internal shape path for vector outlines
@@ -164,11 +180,25 @@ print(map_idw)
 print(map_rk)
 ```
 
+# 4. Discussion of Results
+
+The exploratory spatial data analysis revealed an asymmetry between the sample mean (33.00 g/kg) and median (29.45 g/kg), indicating a **right-skewed distribution** with localized high-value OC hotspots across Bavaria.
+
+Evaluating the Leave-One-Out Cross-Validation metrics demonstrates a significant performance difference between the two interpolation models:
+
+- **Inverse Distance Weighting (IDW)** produced a Root Mean Square Error (RMSE) of 19.94 g/kg. IDW relies solely on spatial proximity,therefore it struggles to capture non-linear local shifts in heterogeneous terrain like Bavaria.
+
+- **Regression Kriging (RK)** drastically reduced prediction error to an RMSE of 5.85 g/kg (that is a 70% reduction in prediction error).
+
+Combining environmental trend relationships (elevation gradients and total nitrogen) with residual kriging, Regression Kriging accounts for deterministic environmental drivers alongside spatial autocorrelation, yielding a superior continuous estimation surface for topsoil organic carbon.
+
 # Reproducibility and Source Code
 
 To ensure complete scientific transparency and computational reproducibility, the underlying package architecture, including the S3 class (`spatial_grid`), geostatistical interpolation methods, and cross-validation functions is fully open-source.
 
 - **GitHub Repository:** [SoilGeoStats Source Code](https://github.com/adebolaadedayo/SoilGeoStats)
+
+- **License:** MIT License.
 
 - **Bug Reports & Contributions:** Issues or feature requests can be logged directly on the repository's issue tracker.
 
