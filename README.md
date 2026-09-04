@@ -1,6 +1,8 @@
 
 # SoilGeoStats
 
+<img width="1600" height="900" alt="image" src="https://github.com/adebolaadedayo/SoilGeoStats/blob/main/logo.png" />
+
 The goal of SoilGeoStats is to provide a reproducible, multi-tiered
 spatial interpolation pipeline tailored for official topsoil
 point-observation datasets.
